@@ -7,6 +7,11 @@ export class FormulaFieldDependencyError extends Error {
     );
   }
 }
+export class FormulaFieldCircularDependencyError extends Error {
+  constructor(fieldId: string) {
+    super(`Can't add field "${fieldId}" due to circular dependency.`);
+  }
+}
 
 export class FormulaFieldDuplicatedError extends Error {
   constructor(fieldId: string) {
