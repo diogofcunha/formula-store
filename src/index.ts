@@ -34,7 +34,7 @@ export function createFormulaStore(): FormulaStore {
       addedFields.set(id, node);
 
       if (dependencies.length) {
-        calculate(values);
+        node.value = calculate(values);
       }
     }
   };
