@@ -79,7 +79,7 @@ describe("addField", () => {
     });
 
     expect(calculateSpy).toHaveBeenCalledTimes(1);
-    expect(calculateSpy).toHaveBeenCalledWith([1, 3]);
+    expect(calculateSpy).toHaveBeenCalledWith(1, 3);
   });
 
   test("shouldn't calculate when adding field without dependencies", () => {
