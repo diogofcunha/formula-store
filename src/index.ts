@@ -2,10 +2,12 @@ import {
   FormulaFieldDependencyError,
   FormulaFieldDuplicatedError
 } from "./errors";
-import { FormulaStore } from "./types";
+import { FormulaStore, FormulaStoreInput } from "./types";
 import { Graph, Node } from "fast-graph";
 
-export function createFormulaStore(): FormulaStore {
+export function createFormulaStore({
+  onChange
+}: FormulaStoreInput): FormulaStore {
   const addedFields = new Map<string, Node<unknown>>();
   const fieldGraph = new Graph();
 
@@ -34,7 +36,14 @@ export function createFormulaStore(): FormulaStore {
       addedFields.set(id, node);
 
       if (dependencies.length) {
-        node.value = calculate(values);
+        node.value = calculate(...values);
+
+        onChange([
+          {
+            id: node.id,
+            value: node.value
+          }
+        ]);
       }
     }
   };
