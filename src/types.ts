@@ -1,7 +1,9 @@
-export interface FormulaField {
+export interface FormulaField<T> {
   id: string;
+  value: T;
+  dependencies: string[];
 }
 
 export interface FormulaStore {
-  addField: (field: FormulaField, dependsOn: string[]) => void;
+  addField: <T>(field: FormulaField<T>) => void;
 }
