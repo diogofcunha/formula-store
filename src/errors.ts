@@ -8,7 +8,7 @@ export class FormulaFieldDependencyError extends Error {
   }
 }
 
-export class FormulaFieldDuplicated extends Error {
+export class FormulaFieldDuplicatedError extends Error {
   constructor(fieldId: string) {
     super(
       `Formula field "${fieldId}" already exists, please delete the field if you want to update it.`
