@@ -1,12 +1,13 @@
 {
-  "name": "npm-package",
-  "description": "npm-package-template",
+  "name": "formula-store",
+  "description": " A package to handle formula calculations and dependency management",
+  "version": "0.0.0-beta",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
     "lib/"
   ],
-  "repository": "git@github.com:diogofcunha/package-template.git",
+  "repository": "git@github.com:diogofcunha/formula-store.git",
   "author": "Diogo Cunha",
   "license": "MIT",
   "scripts": {
