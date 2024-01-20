@@ -10,7 +10,7 @@ export function createFormulaStore(): FormulaStore {
   const fieldGraph = new Graph();
 
   return {
-    addField: ({ id, value, dependencies }) => {
+    addField: ({ id, value, dependencies, calculate }) => {
       if (addedFields.has(id)) {
         throw new FormulaFieldDuplicatedError(id);
       }
@@ -23,13 +23,17 @@ export function createFormulaStore(): FormulaStore {
 
       const node = new Node(id, value);
       fieldGraph.addNode(node);
+      const values = [];
 
       for (const d of dependencies) {
         const parentField = addedFields.get(d) as Node<unknown>;
         fieldGraph.addEdge(parentField, node);
+        values.push(parentField.value);
       }
 
       addedFields.set(id, node);
+
+      calculate(values);
     }
   };
 }
