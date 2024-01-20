@@ -1,4 +1,5 @@
 import {
+  FormulaFieldCircularDependencyError,
   FormulaFieldDependencyError,
   FormulaFieldDuplicatedError
 } from "./errors";
@@ -31,6 +32,14 @@ export function createFormulaStore({
         const parentField = addedFields.get(d) as Node<unknown>;
         fieldGraph.addEdge(parentField, node);
         values.push(parentField.value);
+      }
+
+      try {
+        fieldGraph.kahnTopologicalSort();
+      } catch (ex) {
+        fieldGraph.removeNode(node);
+
+        throw new FormulaFieldCircularDependencyError(id);
       }
 
       addedFields.set(id, node);
