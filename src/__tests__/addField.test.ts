@@ -2,7 +2,7 @@ import { createFormulaStore } from "../";
 
 describe("addField", () => {
   test("should fail if a listed dependency doesn`t exist", () => {
-    const store = createFormulaStore();
+    const store = createFormulaStore({ onChange: jest.fn() });
     expect(() =>
       store.addField({
         dependencies: ["a-b-c"],
@@ -16,7 +16,7 @@ describe("addField", () => {
   });
 
   test("should fail if multiple listed dependency doesn`t exist", () => {
-    const store = createFormulaStore();
+    const store = createFormulaStore({ onChange: jest.fn() });
     expect(() =>
       store.addField({
         dependencies: ["a-b-c", "d-e-f"],
@@ -30,7 +30,7 @@ describe("addField", () => {
   });
 
   test("should fail if trying to re-add field", () => {
-    const store = createFormulaStore();
+    const store = createFormulaStore({ onChange: jest.fn() });
 
     store.addField({
       dependencies: [],
@@ -52,7 +52,7 @@ describe("addField", () => {
   });
 
   test("should calculate correctly when adding field with dependencies", () => {
-    const store = createFormulaStore();
+    const store = createFormulaStore({ onChange: jest.fn() });
 
     // Add fields for dependencies.
     store.addField({
@@ -83,7 +83,7 @@ describe("addField", () => {
   });
 
   test("shouldn't calculate when adding field without dependencies", () => {
-    const store = createFormulaStore();
+    const store = createFormulaStore({ onChange: jest.fn() });
 
     const calculateSpy = jest.fn();
 

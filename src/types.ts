@@ -6,6 +6,15 @@ export interface FormulaField<T> {
   calculate: (...dependencies: any[]) => T;
 }
 
+export interface FormulaUpdate {
+  id: string;
+  value: unknown;
+}
+
+export interface FormulaStoreInput {
+  onChange: (updates: FormulaUpdate[]) => void;
+}
+
 export interface FormulaStore {
   addField: <T>(field: FormulaField<T>) => void;
 }
