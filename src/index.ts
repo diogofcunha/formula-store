@@ -27,8 +27,9 @@ export function createFormulaStore(): FormulaStore {
       for (const d of dependencies) {
         const parentField = addedFields.get(d) as Node<unknown>;
         fieldGraph.addEdge(parentField, node);
-        addedFields.set(id, node);
       }
+
+      addedFields.set(id, node);
     }
   };
 }
