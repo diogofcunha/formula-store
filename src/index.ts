@@ -4,13 +4,20 @@ import {
   FormulaFieldDuplicatedError,
   FormulaFieldNotFoundError
 } from "./errors";
-import { FormulaStore, FormulaStoreInput, FormulaUpdate } from "./types";
-import { Graph, Node } from "fast-graph";
+import {
+  FormulaField,
+  FormulaStore,
+  FormulaStoreInput,
+  FormulaUpdate
+} from "./types";
+import { Graph, Node, SearchAlgorithmNodeBehavior } from "fast-graph";
+
+type AddedField = Node<unknown> & Pick<FormulaField<unknown>, "calculate">;
 
 export function createFormulaStore({
   onChange
 }: FormulaStoreInput): FormulaStore {
-  const addedFields = new Map<string, Node<unknown>>();
+  const addedFields = new Map<string, AddedField>();
   let dependencyTree: Array<Node<unknown>> = [];
   const fieldGraph = new Graph();
 
@@ -26,12 +33,17 @@ export function createFormulaStore({
         throw new FormulaFieldDependencyError(id, missingFields);
       }
 
-      const node = new Node(id, value);
+      const node: AddedField = new Node(id, value);
+
+      if (calculate) {
+        node.calculate = calculate;
+      }
+
       fieldGraph.addNode(node);
       const values = [];
 
       for (const d of dependencies) {
-        const parentField = addedFields.get(d) as Node<unknown>;
+        const parentField = addedFields.get(d) as AddedField;
         fieldGraph.addEdge(parentField, node);
         values.push(parentField.value);
       }
@@ -46,7 +58,7 @@ export function createFormulaStore({
 
       addedFields.set(id, node);
 
-      if (dependencies.length) {
+      if (dependencies.length && calculate) {
         node.value = calculate(...values);
 
         onChange([
@@ -65,8 +77,10 @@ export function createFormulaStore({
         throw new FormulaFieldNotFoundError(missingFields.map(mf => mf.id));
       }
 
+      const possiblyTouchedFields = new Set<string>();
+
       for (const { id, value } of fields) {
-        const node = addedFields.get(id) as Node<unknown>;
+        const node = addedFields.get(id) as AddedField;
 
         node.value = value;
 
@@ -74,11 +88,39 @@ export function createFormulaStore({
           id: node.id,
           value: node.value
         });
+
+        possiblyTouchedFields.add(id);
+
+        fieldGraph.bfs(n => {
+          possiblyTouchedFields.add(n.id);
+
+          return SearchAlgorithmNodeBehavior.continue;
+        }, node);
       }
 
-      for (const dependency of dependencyTree) {
-        console.log(dependency);
+      for (const dep of dependencyTree) {
+        if (!possiblyTouchedFields.has(dep.id)) {
+          continue;
+        }
+
+        const node = addedFields.get(dep.id) as AddedField;
+
+        if (node.calculate) {
+          node.value = node.calculate(
+            ...node.incomingNeighbors.map(n => {
+              const field = addedFields.get(n) as AddedField;
+
+              return field.value;
+            })
+          );
+
+          changes.push({
+            id: node.id,
+            value: node.value
+          });
+        }
       }
+
       onChange(changes);
     }
   };
