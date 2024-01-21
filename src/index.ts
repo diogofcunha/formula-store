@@ -28,10 +28,46 @@ export function createFormulaStore({
       }
 
       const field = addedFields.get(fieldId) as AddedField;
+      const fieldToRecalculate: Map<string, Required<AddedField>> = new Map();
+
+      fieldGraph.bfs(n => {
+        const f = addedFields.get(n.id) as AddedField;
+
+        if (f.calculate) {
+          fieldToRecalculate.set(f.id, f as Required<AddedField>);
+        }
+
+        return SearchAlgorithmNodeBehavior.continue;
+      });
 
       addedFields.delete(fieldId);
       fieldGraph.removeNode(field);
       dependencyTree = fieldGraph.kahnTopologicalSort();
+
+      const changes: FormulaUpdate[] = [];
+
+      for (const dep of dependencyTree) {
+        const node = fieldToRecalculate.get(dep.id);
+
+        if (!node) {
+          continue;
+        }
+
+        node.value = node.calculate(
+          ...node.incomingNeighbors.map(n => {
+            const field = addedFields.get(n) as AddedField;
+
+            return field.value;
+          })
+        );
+
+        changes.push({
+          id: node.id,
+          value: node.value
+        });
+      }
+
+      onChange(changes);
     },
     addField: ({ id, value, dependencies, calculate }) => {
       if (addedFields.has(id)) {
