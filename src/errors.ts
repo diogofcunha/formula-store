@@ -7,6 +7,17 @@ export class FormulaFieldDependencyError extends Error {
     );
   }
 }
+
+export class FormulaFieldNotFoundError extends Error {
+  constructor(fieldId: string | string[]) {
+    const prefix =
+      Array.isArray(fieldId) && fieldId.length > 1
+        ? `Fields "${fieldId.join(", ")}"`
+        : `Field "${Array.isArray(fieldId) ? fieldId[0] : fieldId}"`;
+    super(`${prefix} not found.`);
+  }
+}
+
 export class FormulaFieldCircularDependencyError extends Error {
   constructor(fieldId: string) {
     super(`Can't add field "${fieldId}" due to circular dependency.`);
