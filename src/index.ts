@@ -22,6 +22,17 @@ export function createFormulaStore({
   const fieldGraph = new Graph();
 
   return {
+    removeField: fieldId => {
+      if (!addedFields.has(fieldId)) {
+        throw new FormulaFieldNotFoundError(fieldId);
+      }
+
+      const field = addedFields.get(fieldId) as AddedField;
+
+      addedFields.delete(fieldId);
+      fieldGraph.removeNode(field);
+      dependencyTree = fieldGraph.kahnTopologicalSort();
+    },
     addField: ({ id, value, dependencies, calculate }) => {
       if (addedFields.has(id)) {
         throw new FormulaFieldDuplicatedError(id);
