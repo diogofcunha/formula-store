@@ -1,8 +1,9 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 export interface FormulaField<T> {
   id: string;
   value: T;
   dependencies: string[];
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   calculate: (...dependencies: any[]) => T;
 }
 
@@ -17,4 +18,7 @@ export interface FormulaStoreInput {
 
 export interface FormulaStore {
   addField: <T>(field: FormulaField<T>) => void;
+  updateFieldsValue: (
+    fields: Array<Pick<FormulaField<any>, "value" | "id">>
+  ) => void;
 }
