@@ -9,15 +9,13 @@ describe("createFormulaStore", () => {
     store.addField({
       dependencies: [],
       id: "a",
-      value: 1,
-      calculate: () => 1
+      value: 1
     });
 
     store.addField({
       dependencies: [],
       id: "b",
-      value: 3,
-      calculate: () => 3
+      value: 3
     });
 
     store.addField({

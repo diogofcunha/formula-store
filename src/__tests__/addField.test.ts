@@ -35,16 +35,14 @@ describe("addField", () => {
     store.addField({
       dependencies: [],
       id: "dfc",
-      value: 1,
-      calculate: () => 1
+      value: 1
     });
 
     expect(() =>
       store.addField({
         dependencies: [],
         id: "dfc",
-        value: 1,
-        calculate: () => 1
+        value: 1
       })
     ).toThrowErrorMatchingInlineSnapshot(
       `"Formula field "dfc" already exists, please delete the field if you want to update it."`

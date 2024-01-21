@@ -4,7 +4,7 @@ export interface FormulaField<T> {
   id: string;
   value: T;
   dependencies: string[];
-  calculate: (...dependencies: any[]) => T;
+  calculate?: (...dependencies: any[]) => T;
 }
 
 export interface FormulaUpdate {
