@@ -265,4 +265,88 @@ describe("createFormulaStore", () => {
       ]);
     });
   });
+
+  describe("should remove fields and attached dependencies", () => {
+    const onChange = jest.fn();
+    const store = createFormulaStore({ onChange });
+
+    // Add fields for dependencies.
+    store.addField({
+      dependencies: [],
+      id: "a",
+      value: 1
+    });
+    store.addField({
+      dependencies: [],
+      id: "b",
+      value: 3
+    });
+    store.addField({
+      dependencies: ["a", "b"],
+      id: "c",
+      value: 0,
+      calculate: (a, b) => a + b
+    });
+    store.addField({
+      dependencies: ["c"],
+      id: "d",
+      value: 0,
+      calculate: c => c * 2
+    });
+    store.addField({
+      dependencies: ["d", "a"],
+      id: "e",
+      value: 0,
+      calculate: (d, a) => d - a
+    });
+    store.addField({
+      dependencies: [],
+      id: "f",
+      value: 5
+    });
+    store.addField({
+      dependencies: ["f", "e"],
+      id: "g",
+      value: 0,
+      calculate: (f, e) => f - (e || 0)
+    });
+    store.addField({
+      dependencies: ["g"],
+      id: "h",
+      value: "",
+      calculate: g => `Output ${g}`
+    });
+
+    store.updateFieldsValue([
+      { id: "a", value: 2 },
+      { id: "f", value: 10 }
+    ]);
+
+    onChange.mockReset();
+
+    store.removeField("f");
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        id: "c",
+        value: 5
+      },
+      {
+        id: "d",
+        value: 10
+      },
+      {
+        id: "e",
+        value: 8
+      },
+      {
+        id: "g",
+        value: 8
+      },
+      {
+        id: "h",
+        value: "Output 8"
+      }
+    ]);
+  });
 });
