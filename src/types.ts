@@ -18,7 +18,7 @@ export interface FormulaStoreInput {
 
 export interface FormulaStore {
   addField: <T>(field: FormulaField<T>) => void;
-  removeField: (fieldId: string) => void;
+  removeField: (fieldId: string) => string[];
   updateFieldsValue: (
     fields: Array<Pick<FormulaField<any>, "value" | "id">>
   ) => void;
