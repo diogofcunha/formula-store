@@ -68,6 +68,8 @@ export function createFormulaStore({
       }
 
       onChange(changes);
+
+      return changes.map(c => c.id);
     },
     addField: ({ id, value, dependencies, calculate }) => {
       if (addedFields.has(id)) {
