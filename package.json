@@ -71,5 +71,27 @@
       "prettier --write",
       "git add"
     ]
-  }
+  },
+  "keywords": [
+    "formula",
+    "formula-store",
+    "formula fields",
+    "computation",
+    "calculation",
+    "dependency management",
+    "reactive programming",
+    "state management",
+    "data modeling",
+    "math",
+    "computational",
+    "data-driven",
+    "dynamic calculations",
+    "formulas",
+    "store",
+    "dependency graph",
+    "stateful",
+    "reactive",
+    "algorithm",
+    "data processing"
+  ]
 }
