@@ -38,7 +38,7 @@ export function createFormulaStore({
         }
 
         return SearchAlgorithmNodeBehavior.continue;
-      });
+      }, field);
 
       addedFields.delete(fieldId);
       fieldGraph.removeNode(field);
