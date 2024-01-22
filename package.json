@@ -93,5 +93,11 @@
     "reactive",
     "algorithm",
     "data processing"
-  ]
+  ],
+  "release": {
+    "branches": [
+      "main",
+      "next"
+    ]
+  }
 }
