@@ -324,21 +324,11 @@ describe("createFormulaStore", () => {
 
     onChange.mockReset();
 
-    store.removeField("f");
+    const affected = store.removeField("f");
+
+    expect(affected).toEqual(["g", "h"]);
 
     expect(onChange).toHaveBeenCalledWith([
-      {
-        id: "c",
-        value: 5
-      },
-      {
-        id: "d",
-        value: 10
-      },
-      {
-        id: "e",
-        value: 8
-      },
       {
         id: "g",
         value: 8
