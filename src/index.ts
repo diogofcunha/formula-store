@@ -42,6 +42,34 @@ export function createFormulaStore({
     return possiblyTouchedFields;
   };
 
+  const computeRangeEditValueChanges = (
+    possiblyTouchedFields: Set<string>,
+    changes: FormulaUpdate[]
+  ) => {
+    for (const dep of dependencyTree) {
+      if (!possiblyTouchedFields.has(dep.id)) {
+        continue;
+      }
+
+      const node = addedFields.get(dep.id) as AddedField;
+
+      if (node.calculate) {
+        node.value = node.calculate(
+          ...node.incomingNeighbors.map(n => {
+            const field = addedFields.get(n) as AddedField;
+
+            return field.value;
+          })
+        );
+
+        changes.push({
+          id: node.id,
+          value: node.value
+        });
+      }
+    }
+  };
+
   const onFieldChanged = (
     node: AddedField,
     dependencies: string[]
@@ -182,28 +210,7 @@ export function createFormulaStore({
         getPossibleTouchedFieldsOnNodeChange(node, possiblyTouchedFields);
       }
 
-      for (const dep of dependencyTree) {
-        if (!possiblyTouchedFields.has(dep.id)) {
-          continue;
-        }
-
-        const node = addedFields.get(dep.id) as AddedField;
-
-        if (node.calculate) {
-          node.value = node.calculate(
-            ...node.incomingNeighbors.map(n => {
-              const field = addedFields.get(n) as AddedField;
-
-              return field.value;
-            })
-          );
-
-          changes.push({
-            id: node.id,
-            value: node.value
-          });
-        }
-      }
+      computeRangeEditValueChanges(possiblyTouchedFields, changes);
 
       onChange(changes);
     }
