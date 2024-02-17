@@ -21,6 +21,14 @@ export function createFormulaStore({
   let dependencyTree: Array<Node<unknown>> = [];
   const fieldGraph = new Graph();
 
+  const checkFields = (fieldId: string, dependencies: string[]) => {
+    const missingFields = dependencies.filter(d => !addedFields.has(d));
+
+    if (missingFields.length > 0) {
+      throw new FormulaFieldDependencyError(fieldId, missingFields);
+    }
+  };
+
   return {
     removeField: fieldId => {
       if (!addedFields.has(fieldId)) {
@@ -79,11 +87,7 @@ export function createFormulaStore({
         throw new FormulaFieldDuplicatedError(id);
       }
 
-      const missingFields = dependencies.filter(d => !addedFields.has(d));
-
-      if (missingFields.length > 0) {
-        throw new FormulaFieldDependencyError(id, missingFields);
-      }
+      checkFields(id, dependencies);
 
       const node: AddedField = new Node(id, value);
 
