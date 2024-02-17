@@ -60,6 +60,22 @@ export function createFormulaStore({
     }
   };
 
+  const getFieldsToRecalculateOnNodeChanges = (field: AddedField) => {
+    const fieldToRecalculate: Map<string, Required<AddedField>> = new Map();
+
+    fieldGraph.bfs(n => {
+      const f = addedFields.get(n.id) as AddedField;
+
+      if (f.calculate) {
+        fieldToRecalculate.set(f.id, f as Required<AddedField>);
+      }
+
+      return SearchAlgorithmNodeBehavior.continue;
+    }, field);
+
+    return fieldToRecalculate;
+  };
+
   return {
     removeField: fieldId => {
       if (!addedFields.has(fieldId)) {
@@ -67,17 +83,7 @@ export function createFormulaStore({
       }
 
       const field = addedFields.get(fieldId) as AddedField;
-      const fieldToRecalculate: Map<string, Required<AddedField>> = new Map();
-
-      fieldGraph.bfs(n => {
-        const f = addedFields.get(n.id) as AddedField;
-
-        if (f.calculate) {
-          fieldToRecalculate.set(f.id, f as Required<AddedField>);
-        }
-
-        return SearchAlgorithmNodeBehavior.continue;
-      }, field);
+      const fieldToRecalculate = getFieldsToRecalculateOnNodeChanges(field);
 
       addedFields.delete(fieldId);
       fieldGraph.removeNode(field);
