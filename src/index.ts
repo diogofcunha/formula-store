@@ -162,8 +162,41 @@ export function createFormulaStore({
 
       return changes.map(c => c.id);
     },
-    editField: () => {
-      //
+    editField: ({ id, value, dependencies, calculate }) => {
+      checkFields(id, dependencies);
+
+      const existingField = addedFields.get(id);
+
+      if (!existingField) {
+        throw new FormulaFieldNotFoundError(id);
+      }
+
+      existingField.value = value;
+
+      if (calculate) {
+        existingField.calculate = calculate;
+      } else {
+        existingField.calculate = undefined;
+      }
+
+      for (const f of existingField.incomingNeighbors) {
+        const parentField = addedFields.get(f) as AddedField;
+        fieldGraph.removeEdge(parentField, existingField);
+      }
+
+      const changes = onFieldChanged(existingField, dependencies);
+
+      const possiblyTouchedFields = getPossibleTouchedFieldsOnNodeChange(
+        existingField
+      );
+
+      possiblyTouchedFields.delete(existingField.id);
+
+      computeRangeEditValueChanges(possiblyTouchedFields, changes);
+
+      if (changes.length) {
+        onChange(changes);
+      }
     },
     addField: ({ id, value, dependencies, calculate }) => {
       if (addedFields.has(id)) {
