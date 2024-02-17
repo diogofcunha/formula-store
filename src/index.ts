@@ -21,6 +21,107 @@ export function createFormulaStore({
   let dependencyTree: Array<Node<unknown>> = [];
   const fieldGraph = new Graph();
 
+  const checkFields = (fieldId: string, dependencies: string[]) => {
+    const missingFields = dependencies.filter(d => !addedFields.has(d));
+
+    if (missingFields.length > 0) {
+      throw new FormulaFieldDependencyError(fieldId, missingFields);
+    }
+  };
+
+  const getPossibleTouchedFieldsOnNodeChange = (
+    node: AddedField,
+    possiblyTouchedFields = new Set<string>()
+  ) => {
+    fieldGraph.bfs(n => {
+      possiblyTouchedFields.add(n.id);
+
+      return SearchAlgorithmNodeBehavior.continue;
+    }, node);
+
+    return possiblyTouchedFields;
+  };
+
+  const computeRangeEditValueChanges = (
+    possiblyTouchedFields: Set<string>,
+    changes: FormulaUpdate[]
+  ) => {
+    for (const dep of dependencyTree) {
+      if (!possiblyTouchedFields.has(dep.id)) {
+        continue;
+      }
+
+      const node = addedFields.get(dep.id) as AddedField;
+
+      if (node.calculate) {
+        node.value = node.calculate(
+          ...node.incomingNeighbors.map(n => {
+            const field = addedFields.get(n) as AddedField;
+
+            return field.value;
+          })
+        );
+
+        changes.push({
+          id: node.id,
+          value: node.value
+        });
+      }
+    }
+  };
+
+  const onFieldChanged = (
+    node: AddedField,
+    dependencies: string[]
+  ): FormulaUpdate[] => {
+    const values = [];
+
+    for (const d of dependencies) {
+      const parentField = addedFields.get(d) as AddedField;
+      fieldGraph.addEdge(parentField, node);
+      values.push(parentField.value);
+    }
+
+    try {
+      dependencyTree = fieldGraph.kahnTopologicalSort();
+    } catch (ex) {
+      fieldGraph.removeNode(node);
+
+      throw new FormulaFieldCircularDependencyError(node.id);
+    }
+
+    addedFields.set(node.id, node);
+
+    if (dependencies.length && node.calculate) {
+      node.value = node.calculate(...values);
+
+      return [
+        {
+          id: node.id,
+          value: node.value
+        }
+      ];
+    }
+
+    return [];
+  };
+
+  const getFieldsToRecalculateOnNodeChanges = (field: AddedField) => {
+    const fieldToRecalculate: Map<string, Required<AddedField>> = new Map();
+
+    fieldGraph.bfs(n => {
+      const f = addedFields.get(n.id) as AddedField;
+
+      if (f.calculate) {
+        fieldToRecalculate.set(f.id, f as Required<AddedField>);
+      }
+
+      return SearchAlgorithmNodeBehavior.continue;
+    }, field);
+
+    return fieldToRecalculate;
+  };
+
   return {
     removeField: fieldId => {
       if (!addedFields.has(fieldId)) {
@@ -28,17 +129,7 @@ export function createFormulaStore({
       }
 
       const field = addedFields.get(fieldId) as AddedField;
-      const fieldToRecalculate: Map<string, Required<AddedField>> = new Map();
-
-      fieldGraph.bfs(n => {
-        const f = addedFields.get(n.id) as AddedField;
-
-        if (f.calculate) {
-          fieldToRecalculate.set(f.id, f as Required<AddedField>);
-        }
-
-        return SearchAlgorithmNodeBehavior.continue;
-      }, field);
+      const fieldToRecalculate = getFieldsToRecalculateOnNodeChanges(field);
 
       addedFields.delete(fieldId);
       fieldGraph.removeNode(field);
@@ -71,16 +162,48 @@ export function createFormulaStore({
 
       return changes.map(c => c.id);
     },
+    editField: ({ id, value, dependencies, calculate }) => {
+      checkFields(id, dependencies);
+
+      const existingField = addedFields.get(id);
+
+      if (!existingField) {
+        throw new FormulaFieldNotFoundError(id);
+      }
+
+      existingField.value = value;
+
+      if (calculate) {
+        existingField.calculate = calculate;
+      } else {
+        existingField.calculate = undefined;
+      }
+
+      for (const f of existingField.incomingNeighbors) {
+        const parentField = addedFields.get(f) as AddedField;
+        fieldGraph.removeEdge(parentField, existingField);
+      }
+
+      const changes = onFieldChanged(existingField, dependencies);
+
+      const possiblyTouchedFields = getPossibleTouchedFieldsOnNodeChange(
+        existingField
+      );
+
+      possiblyTouchedFields.delete(existingField.id);
+
+      computeRangeEditValueChanges(possiblyTouchedFields, changes);
+
+      if (changes.length) {
+        onChange(changes);
+      }
+    },
     addField: ({ id, value, dependencies, calculate }) => {
       if (addedFields.has(id)) {
         throw new FormulaFieldDuplicatedError(id);
       }
 
-      const missingFields = dependencies.filter(d => !addedFields.has(d));
-
-      if (missingFields.length > 0) {
-        throw new FormulaFieldDependencyError(id, missingFields);
-      }
+      checkFields(id, dependencies);
 
       const node: AddedField = new Node(id, value);
 
@@ -89,33 +212,10 @@ export function createFormulaStore({
       }
 
       fieldGraph.addNode(node);
-      const values = [];
+      const changes = onFieldChanged(node, dependencies);
 
-      for (const d of dependencies) {
-        const parentField = addedFields.get(d) as AddedField;
-        fieldGraph.addEdge(parentField, node);
-        values.push(parentField.value);
-      }
-
-      try {
-        dependencyTree = fieldGraph.kahnTopologicalSort();
-      } catch (ex) {
-        fieldGraph.removeNode(node);
-
-        throw new FormulaFieldCircularDependencyError(id);
-      }
-
-      addedFields.set(id, node);
-
-      if (dependencies.length && calculate) {
-        node.value = calculate(...values);
-
-        onChange([
-          {
-            id: node.id,
-            value: node.value
-          }
-        ]);
+      if (changes.length) {
+        onChange(changes);
       }
     },
     updateFieldsValue: fields => {
@@ -140,35 +240,10 @@ export function createFormulaStore({
 
         possiblyTouchedFields.add(id);
 
-        fieldGraph.bfs(n => {
-          possiblyTouchedFields.add(n.id);
-
-          return SearchAlgorithmNodeBehavior.continue;
-        }, node);
+        getPossibleTouchedFieldsOnNodeChange(node, possiblyTouchedFields);
       }
 
-      for (const dep of dependencyTree) {
-        if (!possiblyTouchedFields.has(dep.id)) {
-          continue;
-        }
-
-        const node = addedFields.get(dep.id) as AddedField;
-
-        if (node.calculate) {
-          node.value = node.calculate(
-            ...node.incomingNeighbors.map(n => {
-              const field = addedFields.get(n) as AddedField;
-
-              return field.value;
-            })
-          );
-
-          changes.push({
-            id: node.id,
-            value: node.value
-          });
-        }
-      }
+      computeRangeEditValueChanges(possiblyTouchedFields, changes);
 
       onChange(changes);
     }

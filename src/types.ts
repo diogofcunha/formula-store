@@ -62,6 +62,11 @@ export interface FormulaStore {
    */
   addField: <T>(field: FormulaField<T>) => void;
   /**
+   * Edits a formula field in the store.
+   * @template T - The type of the field value.
+   */
+  editField: <T>(field: FormulaField<T>) => void;
+  /**
    * Removes a formula field from the store based on its identifier.
    * @returns {string[]} - An array of the field identifiers affected by the removal.
    */
