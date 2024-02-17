@@ -38,6 +38,8 @@ export function createFormulaStore({
 
       return SearchAlgorithmNodeBehavior.continue;
     }, node);
+
+    return possiblyTouchedFields;
   };
 
   const onFieldChanged = (node: AddedField, dependencies: string[]) => {
