@@ -42,7 +42,10 @@ export function createFormulaStore({
     return possiblyTouchedFields;
   };
 
-  const onFieldChanged = (node: AddedField, dependencies: string[]) => {
+  const onFieldChanged = (
+    node: AddedField,
+    dependencies: string[]
+  ): FormulaUpdate[] => {
     const values = [];
 
     for (const d of dependencies) {
@@ -64,13 +67,15 @@ export function createFormulaStore({
     if (dependencies.length && node.calculate) {
       node.value = node.calculate(...values);
 
-      onChange([
+      return [
         {
           id: node.id,
           value: node.value
         }
-      ]);
+      ];
     }
+
+    return [];
   };
 
   const getFieldsToRecalculateOnNodeChanges = (field: AddedField) => {
@@ -146,7 +151,11 @@ export function createFormulaStore({
       }
 
       fieldGraph.addNode(node);
-      onFieldChanged(node, dependencies);
+      const changes = onFieldChanged(node, dependencies);
+
+      if (changes.length) {
+        onChange(changes);
+      }
     },
     updateFieldsValue: fields => {
       const missingFields = fields.filter(d => !addedFields.has(d.id));
