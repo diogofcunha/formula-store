@@ -71,6 +71,9 @@ export function createFormulaStore({
 
       return changes.map(c => c.id);
     },
+    editField: () => {
+      //
+    },
     addField: ({ id, value, dependencies, calculate }) => {
       if (addedFields.has(id)) {
         throw new FormulaFieldDuplicatedError(id);
