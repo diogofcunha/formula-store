@@ -29,6 +29,17 @@ export function createFormulaStore({
     }
   };
 
+  const getPossibleTouchedFieldsOnNodeChange = (
+    node: AddedField,
+    possiblyTouchedFields = new Set<string>()
+  ) => {
+    fieldGraph.bfs(n => {
+      possiblyTouchedFields.add(n.id);
+
+      return SearchAlgorithmNodeBehavior.continue;
+    }, node);
+  };
+
   const onFieldChanged = (node: AddedField, dependencies: string[]) => {
     const values = [];
 
@@ -157,11 +168,7 @@ export function createFormulaStore({
 
         possiblyTouchedFields.add(id);
 
-        fieldGraph.bfs(n => {
-          possiblyTouchedFields.add(n.id);
-
-          return SearchAlgorithmNodeBehavior.continue;
-        }, node);
+        getPossibleTouchedFieldsOnNodeChange(node, possiblyTouchedFields);
       }
 
       for (const dep of dependencyTree) {
