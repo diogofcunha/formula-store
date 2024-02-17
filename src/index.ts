@@ -29,6 +29,37 @@ export function createFormulaStore({
     }
   };
 
+  const onFieldChanged = (node: AddedField, dependencies: string[]) => {
+    const values = [];
+
+    for (const d of dependencies) {
+      const parentField = addedFields.get(d) as AddedField;
+      fieldGraph.addEdge(parentField, node);
+      values.push(parentField.value);
+    }
+
+    try {
+      dependencyTree = fieldGraph.kahnTopologicalSort();
+    } catch (ex) {
+      fieldGraph.removeNode(node);
+
+      throw new FormulaFieldCircularDependencyError(node.id);
+    }
+
+    addedFields.set(node.id, node);
+
+    if (dependencies.length && node.calculate) {
+      node.value = node.calculate(...values);
+
+      onChange([
+        {
+          id: node.id,
+          value: node.value
+        }
+      ]);
+    }
+  };
+
   return {
     removeField: fieldId => {
       if (!addedFields.has(fieldId)) {
@@ -96,34 +127,7 @@ export function createFormulaStore({
       }
 
       fieldGraph.addNode(node);
-      const values = [];
-
-      for (const d of dependencies) {
-        const parentField = addedFields.get(d) as AddedField;
-        fieldGraph.addEdge(parentField, node);
-        values.push(parentField.value);
-      }
-
-      try {
-        dependencyTree = fieldGraph.kahnTopologicalSort();
-      } catch (ex) {
-        fieldGraph.removeNode(node);
-
-        throw new FormulaFieldCircularDependencyError(id);
-      }
-
-      addedFields.set(id, node);
-
-      if (dependencies.length && calculate) {
-        node.value = calculate(...values);
-
-        onChange([
-          {
-            id: node.id,
-            value: node.value
-          }
-        ]);
-      }
+      onFieldChanged(node, dependencies);
     },
     updateFieldsValue: fields => {
       const missingFields = fields.filter(d => !addedFields.has(d.id));
