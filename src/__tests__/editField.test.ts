@@ -113,6 +113,16 @@ describe("edit field", () => {
     ).toThrowErrorMatchingInlineSnapshot(
       `"Can't add field "a" due to circular dependency."`
     );
+
+    // Check if Field was removed.
+    expect(
+      store.addField({
+        dependencies: [],
+        id: "a",
+        value: 3,
+        calculate: jest.fn()
+      })
+    ).not.toThrow();
   });
 
   test("should calculate correctly when removing a field dependency", () => {
