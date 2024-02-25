@@ -122,46 +122,48 @@ export function createFormulaStore({
     return fieldToRecalculate;
   };
 
+  const removeField = (fieldId: string) => {
+    if (!addedFields.has(fieldId)) {
+      throw new FormulaFieldNotFoundError(fieldId);
+    }
+
+    const field = addedFields.get(fieldId) as AddedField;
+    const fieldToRecalculate = getFieldsToRecalculateOnNodeChanges(field);
+
+    addedFields.delete(fieldId);
+    fieldGraph.removeNode(field);
+    dependencyTree = fieldGraph.kahnTopologicalSort();
+
+    const changes: FormulaUpdate[] = [];
+
+    for (const dep of dependencyTree) {
+      const node = fieldToRecalculate.get(dep.id);
+
+      if (!node) {
+        continue;
+      }
+
+      node.value = node.calculate(
+        ...node.incomingNeighbors.map(n => {
+          const field = addedFields.get(n) as AddedField;
+
+          return field.value;
+        })
+      );
+
+      changes.push({
+        id: node.id,
+        value: node.value
+      });
+    }
+
+    onChange(changes);
+
+    return changes.map(c => c.id);
+  };
+
   return {
-    removeField: fieldId => {
-      if (!addedFields.has(fieldId)) {
-        throw new FormulaFieldNotFoundError(fieldId);
-      }
-
-      const field = addedFields.get(fieldId) as AddedField;
-      const fieldToRecalculate = getFieldsToRecalculateOnNodeChanges(field);
-
-      addedFields.delete(fieldId);
-      fieldGraph.removeNode(field);
-      dependencyTree = fieldGraph.kahnTopologicalSort();
-
-      const changes: FormulaUpdate[] = [];
-
-      for (const dep of dependencyTree) {
-        const node = fieldToRecalculate.get(dep.id);
-
-        if (!node) {
-          continue;
-        }
-
-        node.value = node.calculate(
-          ...node.incomingNeighbors.map(n => {
-            const field = addedFields.get(n) as AddedField;
-
-            return field.value;
-          })
-        );
-
-        changes.push({
-          id: node.id,
-          value: node.value
-        });
-      }
-
-      onChange(changes);
-
-      return changes.map(c => c.id);
-    },
+    removeField,
     editField: ({ id, value, dependencies, calculate }) => {
       checkFields(id, dependencies);
 
