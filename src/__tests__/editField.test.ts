@@ -99,7 +99,7 @@ describe("edit field", () => {
       `[Error: Can't add field "d" due to circular dependency.]`
     );
 
-    expect(error?.dependentFields).toEqual(["d", "e"]);
+    expect(error?.dependentFields).toEqual(["e"]);
 
     // Check if Field was removed.
     expect(() =>
