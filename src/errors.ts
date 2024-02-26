@@ -19,7 +19,7 @@ export class FormulaFieldNotFoundError extends Error {
 }
 
 export class FormulaFieldCircularDependencyError extends Error {
-  constructor(fieldId: string) {
+  constructor(fieldId: string, public readonly dependentFields: string[]) {
     super(`Can't add field "${fieldId}" due to circular dependency.`);
   }
 }
