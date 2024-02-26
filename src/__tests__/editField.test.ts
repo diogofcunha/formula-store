@@ -1,4 +1,5 @@
 import { createFormulaStore } from "..";
+import { FormulaFieldCircularDependencyError } from "../errors";
 
 describe("edit field", () => {
   test("should fail if a listed dependency doesn`t exist", () => {
@@ -72,18 +73,33 @@ describe("edit field", () => {
       calculate: calculateSpyFieldD
     });
 
+    store.addField({
+      dependencies: ["d"],
+      id: "e",
+      value: 0,
+      calculate: () => 2
+    });
+
     calculateSpyFieldD.mockClear();
 
-    expect(() =>
+    let error: null | FormulaFieldCircularDependencyError = null;
+
+    try {
       store.editField({
         dependencies: ["a", "b", "d"],
         id: "d",
         value: 0,
         calculate: calculateSpyFieldD
-      })
-    ).toThrowErrorMatchingInlineSnapshot(
-      `"Can't add field "d" due to circular dependency."`
+      });
+    } catch (ex) {
+      error = ex as FormulaFieldCircularDependencyError;
+    }
+
+    expect(error).toMatchInlineSnapshot(
+      `[Error: Can't add field "d" due to circular dependency.]`
     );
+
+    expect(error?.dependentFields).toEqual(["e"]);
 
     // Check if Field was removed.
     expect(() =>
