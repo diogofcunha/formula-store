@@ -85,9 +85,11 @@ export function createFormulaStore({
     try {
       dependencyTree = fieldGraph.kahnTopologicalSort();
     } catch (ex) {
+      const dependentFields = [...getPossibleTouchedFieldsOnNodeChange(node)];
+
       removeField(node.id);
 
-      throw new FormulaFieldCircularDependencyError(node.id);
+      throw new FormulaFieldCircularDependencyError(node.id, dependentFields);
     }
 
     addedFields.set(node.id, node);
