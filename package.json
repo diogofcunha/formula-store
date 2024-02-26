@@ -1,7 +1,7 @@
 {
   "name": "formula-store",
   "description": " A package to handle formula calculations and dependency management",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "files": [
