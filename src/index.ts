@@ -168,6 +168,15 @@ export function createFormulaStore({
 
   return {
     removeField,
+    getFieldById: fieldId => {
+      const existingField = addedFields.get(fieldId);
+
+      if (!existingField) {
+        throw new FormulaFieldNotFoundError(fieldId);
+      }
+
+      return existingField;
+    },
     editField: ({ id, value, dependencies, calculate }) => {
       checkFields(id, dependencies);
 
