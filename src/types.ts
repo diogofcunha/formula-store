@@ -79,6 +79,11 @@ export interface FormulaStore {
   updateFieldsValue: (
     fields: Array<Pick<FormulaField<any>, "value" | "id">>
   ) => void;
+  /**
+   * Gets a formula field from the store by id.
+   * @template T - The type of the field value.
+   */
+  getFieldById: (fieldId: string) => AddedField;
 }
 
 export type AddedField = Node<unknown> &
