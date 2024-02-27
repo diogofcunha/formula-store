@@ -90,6 +90,18 @@ store.updateFieldsValue([
 // Remove a formula field from the store.
 const affectedFields = store.removeField("a");
 console.log("Affected Fields: ", affectedFields);
+
+// Edit a store field.
+store.editField({
+  dependencies: ["a", "b"],
+  id: "c",
+  value: 0,
+  calculate: (a, b) => a + b
+});
+
+// Get previously added field.
+const fieldA = store.getFieldById("a");
+console.log("Field a: ", fieldA);
 ```
 
 ## API Reference
@@ -121,8 +133,10 @@ Represents the input configuration for the FormulaStore.
 Represents a store for managing formula fields.
 
 - `addField`: Adds a new formula field to the store.
+- `editField`: Edits a formula previously added to the store.
 - `removeField`: Removes a formula field from the store based on its identifier.
 - `updateFieldsValue`: Updates the values of multiple formula fields in the store.
+- `getFieldById`: Gets a field from the store by id.
 
 ## Contributing
 

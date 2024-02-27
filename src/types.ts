@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { Node } from "fast-graph";
+
 /**
  * Represents a field that is either a direct formula
  * or a field that will be used inside another formula.
@@ -77,4 +79,12 @@ export interface FormulaStore {
   updateFieldsValue: (
     fields: Array<Pick<FormulaField<any>, "value" | "id">>
   ) => void;
+  /**
+   * Gets a formula field from the store by id.
+   * @template T - The type of the field value.
+   */
+  getFieldById: (fieldId: string) => AddedField;
 }
+
+export type AddedField = Node<unknown> &
+  Pick<FormulaField<unknown>, "calculate">;

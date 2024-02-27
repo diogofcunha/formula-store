@@ -5,14 +5,12 @@ import {
   FormulaFieldNotFoundError
 } from "./errors";
 import {
-  FormulaField,
+  AddedField,
   FormulaStore,
   FormulaStoreInput,
   FormulaUpdate
 } from "./types";
 import { Graph, Node, SearchAlgorithmNodeBehavior } from "fast-graph";
-
-type AddedField = Node<unknown> & Pick<FormulaField<unknown>, "calculate">;
 
 export function createFormulaStore({
   onChange
@@ -170,6 +168,15 @@ export function createFormulaStore({
 
   return {
     removeField,
+    getFieldById: fieldId => {
+      const existingField = addedFields.get(fieldId);
+
+      if (!existingField) {
+        throw new FormulaFieldNotFoundError(fieldId);
+      }
+
+      return existingField;
+    },
     editField: ({ id, value, dependencies, calculate }) => {
       checkFields(id, dependencies);
 
