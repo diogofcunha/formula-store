@@ -61,7 +61,7 @@ describe("getFieldById", () => {
     expect(store.getFieldById("c")).toEqual({
       id: "c",
       calculate: expect.any(Function),
-      incomingNeighbors: ["b", "a"],
+      incomingNeighbors: ["a", "b"],
       value: 8
     });
   });
