@@ -194,7 +194,9 @@ export function createFormulaStore({
         existingField.calculate = undefined;
       }
 
-      for (const f of existingField.incomingNeighbors) {
+      const edgesToRemove = existingField.incomingNeighbors.slice();
+
+      for (const f of edgesToRemove) {
         const parentField = addedFields.get(f) as AddedField;
         fieldGraph.removeEdge(parentField, existingField);
       }
